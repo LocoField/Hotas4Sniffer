@@ -11,6 +11,12 @@
 #include "enum.h"
 #include "iocontrol.h"
 
+struct DataHeader
+{
+	pcaprec_hdr_s recordHeader;
+	USBPCAP_BUFFER_PACKET_HEADER packetHeader;
+};
+
 Hotas4Sniffer::Hotas4Sniffer()
 {
 }
@@ -113,13 +119,26 @@ void Hotas4Sniffer::readDataFromDevice()
 
 void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 {
-	if (bytes == 0)
+	// beginning with a USBPcap header
+	if (bytes == sizeof(pcap_hdr_s))
 	{
-		/* Nothing more to process */
+		// TODO: version handling
 		return;
 	}
 
-	printf("\n-------------------------\n");
+	DataHeader header;
+	memcpy(&header, buffer, sizeof(header));
+
+	buffer += sizeof(header);
+	bytes -= sizeof(header);
+
+	if (header.packetHeader.function != URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER ||
+		header.packetHeader.dataLength == 0)
+	{
+		return;
+	}
+
+	printf("\n--------------------------------------------------\n");
 
 	for (unsigned i = 0; i < bytes; i++)
 	{
