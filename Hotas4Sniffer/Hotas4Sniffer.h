@@ -16,6 +16,7 @@ public:
 
 protected:
 	void readDevice();
+	void processData(unsigned char* data, DWORD bytes);
 
 public:
 	bool start();

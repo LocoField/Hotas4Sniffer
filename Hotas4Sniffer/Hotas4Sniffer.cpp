@@ -89,18 +89,10 @@ void Hotas4Sniffer::readDevice()
 		{
 			GetOverlappedResult(deviceHandle, &readOverlapped, &read, TRUE);
 			ResetEvent(readOverlapped.hEvent);
+
+			processData(buffer, read);
+
 			ReadFile(deviceHandle, buffer, bufferlen, &read, &readOverlapped);
-
-			if (read == 0)
-				continue;
-
-			for (unsigned i = 0; i < read; i++)
-			{
-				if (i % 16 == 0)
-					printf("\n");
-
-				printf("%x  ", buffer[i]);
-			}
 		}
 		else if (dw == WAIT_FAILED)
 		{
@@ -116,6 +108,19 @@ void Hotas4Sniffer::readDevice()
 	if (buffer != NULL)
 	{
 		delete[] buffer;
+	}
+}
+
+void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
+{
+	printf("\n-------------------------\n");
+
+	for (unsigned i = 0; i < bytes; i++)
+	{
+		if (i % 16 == 0)
+			printf("\n");
+
+		printf("%x  ", buffer[i]);
 	}
 }
 
