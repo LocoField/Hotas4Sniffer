@@ -66,7 +66,7 @@ bool Hotas4Sniffer::findDevice()
 	return false;
 }
 
-void Hotas4Sniffer::readDevice()
+void Hotas4Sniffer::readDataFromDevice()
 {
 	OVERLAPPED readOverlapped;
 	HANDLE readHandle;
@@ -113,6 +113,12 @@ void Hotas4Sniffer::readDevice()
 
 void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 {
+	if (bytes == 0)
+	{
+		/* Nothing more to process */
+		return;
+	}
+
 	printf("\n-------------------------\n");
 
 	for (unsigned i = 0; i < bytes; i++)
@@ -120,7 +126,7 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 		if (i % 16 == 0)
 			printf("\n");
 
-		printf("%x  ", buffer[i]);
+		printf("%2x  ", buffer[i]);
 	}
 }
 
@@ -163,7 +169,7 @@ bool Hotas4Sniffer::start()
 
 	running = true;
 
-	std::thread(std::bind(&Hotas4Sniffer::readDevice, this)).detach();
+	std::thread(std::bind(&Hotas4Sniffer::readDataFromDevice, this)).detach();
 	return true;
 
 FINISH:

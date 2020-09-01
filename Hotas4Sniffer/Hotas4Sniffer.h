@@ -15,7 +15,7 @@ public:
 	bool findDevice();
 
 protected:
-	void readDevice();
+	void readDataFromDevice();
 	void processData(unsigned char* data, DWORD bytes);
 
 public:
