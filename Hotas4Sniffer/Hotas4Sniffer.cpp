@@ -138,14 +138,45 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 		return;
 	}
 
+
+	COORD pos;
+	pos.X = 0;
+	pos.Y = 0;
+
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+
 	printf("\n--------------------------------------------------\n");
+
+	/*
+	01
+	00 00     // x-axis [0-1023]
+	00 00     // y-axis [0-1023]
+	80 80     // thorttle [00-ff] and yaw [00-ff]
+	ff ff 80  // pedal
+	80        // rubber
+	08        // button bit [hat + R1, L1, R3, L3]
+	00        // button bit [1, 2, 4, 8, 10, 20, 40, 80]
+	*/
+
+	int arr[] = { 1, 2, 2, 2, 3, 1, 1, 1, 0 };
+	int pindex = 0;
+	int pcount = 0;
 
 	for (unsigned i = 0; i < bytes; i++)
 	{
-		if (i % 16 == 0)
-			printf("\n");
-
 		printf("%2x  ", buffer[i]);
+		pcount++;
+
+		if (pcount == arr[pindex])
+		{
+			pcount = 0;
+			pindex++;
+
+			printf("\n");
+		}
+
+		if (arr[pindex] == 0)
+			break;
 	}
 }
 
