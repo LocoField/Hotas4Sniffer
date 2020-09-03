@@ -117,6 +117,67 @@ bool Hotas4Sniffer::findDevice()
 	return false;
 }
 
+bool Hotas4Sniffer::start()
+{
+	USBPCAP_ADDRESS_FILTER filter;
+	DWORD bytes_ret = 0;
+
+	if (USBPcapInitAddressFilter(&filter, NULL, TRUE) == FALSE)
+	{
+		return false;
+	}
+
+	deviceHandle = CreateFileA(deviceAddr, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+	if (deviceHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("Couldn't open device: %d\n", GetLastError());
+		return false;
+	}
+
+
+	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_SET_SNAPLEN_SIZE, &snaplen, sizeof(snaplen), NULL, 0, &bytes_ret, 0) == false)
+	{
+		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
+		goto FINISH;
+	}
+
+	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_SETUP_BUFFER, &bufferlen, sizeof(bufferlen), NULL, 0, &bytes_ret, 0) == false)
+	{
+		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
+		goto FINISH;
+	}
+
+	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_START_FILTERING, &filter, sizeof(filter), NULL, 0, &bytes_ret, 0) == false)
+	{
+		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
+		goto FINISH;
+	}
+
+
+	running = true;
+
+	std::thread(std::bind(&Hotas4Sniffer::readDataFromDevice, this)).detach();
+	return true;
+
+FINISH:
+	if (deviceHandle != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(deviceHandle);
+	}
+
+	return false;
+}
+
+void Hotas4Sniffer::stop()
+{
+	running = false;
+}
+
+bool Hotas4Sniffer::isRunning()
+{
+	return running;
+}
+
 void Hotas4Sniffer::readDataFromDevice()
 {
 	OVERLAPPED readOverlapped;
@@ -186,6 +247,7 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 	Hotas4Data data;
 	memcpy(&data, buffer, sizeof(data));
 
+#ifdef _DEBUG
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD());
 
 	printf("handle: %4d, %4d\n", data.handleX, data.handleY);
@@ -195,65 +257,13 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 	printf("button1: %3d\n", data.buttons1);
 	printf("button2: %3d\n", data.buttons2);
 	printf("pedals: %3d %3d %3d\n", data.pedals[0], data.pedals[1], data.pedals[2]);
+#endif
 }
 
-bool Hotas4Sniffer::start()
+void Hotas4Sniffer::onAxisEvent(const Axis& axis)
 {
-	USBPCAP_ADDRESS_FILTER filter;
-	DWORD bytes_ret = 0;
-
-	if (USBPcapInitAddressFilter(&filter, NULL, TRUE) == FALSE)
-	{
-		return false;
-	}
-
-	deviceHandle = CreateFileA(deviceAddr, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
-	if (deviceHandle == INVALID_HANDLE_VALUE)
-	{
-		printf("Couldn't open device: %d\n", GetLastError());
-		return false;
-	}
-
-
-	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_SET_SNAPLEN_SIZE, &snaplen, sizeof(snaplen), NULL, 0, &bytes_ret, 0) == false)
-	{
-		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
-		goto FINISH;
-	}
-
-	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_SETUP_BUFFER, &bufferlen, sizeof(bufferlen), NULL, 0, &bytes_ret, 0) == false)
-	{
-		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
-		goto FINISH;
-	}
-
-	if (DeviceIoControl(deviceHandle, IOCTL_USBPCAP_START_FILTERING, &filter, sizeof(filter), NULL, 0, &bytes_ret, 0) == false)
-	{
-		printf("DeviceIoControl failed with %d status (supplimentary code %d)\n", GetLastError(), bytes_ret);
-		goto FINISH;
-	}
-
-
-	running = true;
-
-	std::thread(std::bind(&Hotas4Sniffer::readDataFromDevice, this)).detach();
-	return true;
-
-FINISH:
-	if (deviceHandle != INVALID_HANDLE_VALUE)
-	{
-		CloseHandle(deviceHandle);
-	}
-
-	return false;
 }
 
-void Hotas4Sniffer::stop()
+void Hotas4Sniffer::onButtonEvent(int buttonId)
 {
-	running = false;
-}
-
-bool Hotas4Sniffer::isRunning()
-{
-	return running;
 }

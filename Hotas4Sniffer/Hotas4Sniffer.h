@@ -5,6 +5,15 @@
 #define DEFAULT_SNAPSHOT_LENGTH             (65535)
 #define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024*1024)
 
+class Axis
+{
+public:
+	float roll;
+	float pitch;
+	float yaw;
+
+};
+
 class Hotas4Sniffer
 {
 public:
@@ -13,15 +22,17 @@ public:
 
 public:
 	bool findDevice();
+	bool start();
+	void stop();
+	bool isRunning();
 
 protected:
 	void readDataFromDevice();
 	void processData(unsigned char* data, DWORD bytes);
 
 public:
-	bool start();
-	void stop();
-	bool isRunning();
+	void onAxisEvent(const Axis& axis);
+	void onButtonEvent(int buttonId);
 
 private:
 	unsigned int snaplen = DEFAULT_SNAPSHOT_LENGTH;
