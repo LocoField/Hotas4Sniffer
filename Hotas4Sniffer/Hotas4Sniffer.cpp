@@ -258,10 +258,21 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 	printf("button2: %3d\n", data.buttons2);
 	printf("pedals: %3d %3d %3d\n", data.pedals[0], data.pedals[1], data.pedals[2]);
 #endif
+
+	Axis currentAxis = Axis::fromHotas4Handle(data.handleX, data.handleY, data.twist);
+
+	if (lastAxis != currentAxis)
+	{
+		onAxisEvent(currentAxis);
+	}
+
+	lastAxis = currentAxis;
 }
 
 void Hotas4Sniffer::onAxisEvent(const Axis& axis)
 {
+	printf("\n");
+	printf("Axis: %3.2f  %3.2f  %3.2f  \n", axis.roll, axis.pitch, axis.yaw);
 }
 
 void Hotas4Sniffer::onButtonEvent(int buttonId)

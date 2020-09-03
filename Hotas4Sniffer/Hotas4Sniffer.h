@@ -1,18 +1,11 @@
 #pragma once
 
+#include "Axis.h"
+
 #include <Windows.h>
 
 #define DEFAULT_SNAPSHOT_LENGTH             (65535)
 #define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024*1024)
-
-class Axis
-{
-public:
-	float roll;
-	float pitch;
-	float yaw;
-
-};
 
 class Hotas4Sniffer
 {
@@ -42,5 +35,7 @@ private:
 	HANDLE deviceHandle;
 
 	bool running = false;
+
+	Axis lastAxis;
 
 };
