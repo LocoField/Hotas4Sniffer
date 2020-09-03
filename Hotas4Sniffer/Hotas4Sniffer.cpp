@@ -17,6 +17,51 @@ struct DataHeader
 	USBPCAP_BUFFER_PACKET_HEADER packetHeader;
 };
 
+enum ButtonMap
+{
+	/* for buttons1 */
+	SWITCH_HAT_UP = 0,
+	SWITCH_HAT_UP_RIGHT = 1,
+	SWITCH_HAT_RIGHT = 2,
+	SWITCH_HAT_DOWN_RIGHT = 3,
+	SWITCH_HAT_DOWN = 4,
+	SWITCH_HAT_DOWN_LEFT = 5,
+	SWITCH_HAT_LEFT = 6,
+	SWITCH_HAT_UP_LEFT = 7,
+	SWITCH_HAT_CENTER = 8,
+
+	BUTTON_R1 = 10,
+	BUTTON_L1 = 20,
+	BUTTON_R3 = 40,
+	BUTTON_L3 = 80,
+
+	/* for buttons2 */
+	BUTTON_RECTANGLE = 1,
+	BUTTON_CROSS = 2,
+	BUTTON_CIRCLE = 4,
+	BUTTON_TRIANGLE = 8,
+
+	BUTTON_R2 = 10,
+	BUTTON_L2 = 20,
+	BUTTON_SHARE = 40,
+	BUTTON_OPTIONS = 80,
+};
+
+#pragma pack(push, 1)
+struct Hotas4Data
+{
+	unsigned char index;     // [1]
+	unsigned short handleX;  // [0-1023]
+	unsigned short handleY;  // [0-1023]
+	unsigned char throttle;  // [ff-00]
+	unsigned char twist;     // [00-ff]
+	unsigned char pedals[3]; // [ff,ff,80]: left brake, right brake, rudder
+	unsigned char rocker;    // [00-ff]
+	unsigned char buttons1;  // [1|2|4|8|10|20|40|80]: hat-switch, R1, L1, R3, L3]
+	unsigned char buttons2;  // [1|2|4|8|10|20|40|80]: ¡à, ¡¿, ¡Û, ¡â, R2, L2, SHARE, OPTIONS
+};
+#pragma pack(pop)
+
 Hotas4Sniffer::Hotas4Sniffer()
 {
 }
@@ -138,46 +183,18 @@ void Hotas4Sniffer::processData(unsigned char* buffer, DWORD bytes)
 		return;
 	}
 
+	Hotas4Data data;
+	memcpy(&data, buffer, sizeof(data));
 
-	COORD pos;
-	pos.X = 0;
-	pos.Y = 0;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD());
 
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-
-	printf("\n--------------------------------------------------\n");
-
-	/*
-	01
-	00 00     // x-axis [0-1023]
-	00 00     // y-axis [0-1023]
-	80 80     // thorttle [00-ff] and yaw [00-ff]
-	ff ff 80  // pedal
-	80        // rubber
-	08        // button bit [hat + R1, L1, R3, L3]
-	00        // button bit [1, 2, 4, 8, 10, 20, 40, 80]
-	*/
-
-	int arr[] = { 1, 2, 2, 2, 3, 1, 1, 1, 0 };
-	int pindex = 0;
-	int pcount = 0;
-
-	for (unsigned i = 0; i < bytes; i++)
-	{
-		printf("%2x  ", buffer[i]);
-		pcount++;
-
-		if (pcount == arr[pindex])
-		{
-			pcount = 0;
-			pindex++;
-
-			printf("\n");
-		}
-
-		if (arr[pindex] == 0)
-			break;
-	}
+	printf("handle: %4d, %4d\n", data.handleX, data.handleY);
+	printf("twist: %3d\n", data.twist);
+	printf("throttle: %3d\n", data.throttle);
+	printf("rocker: %3d\n", data.rocker);
+	printf("button1: %3d\n", data.buttons1);
+	printf("button2: %3d\n", data.buttons2);
+	printf("pedals: %3d %3d %3d\n", data.pedals[0], data.pedals[1], data.pedals[2]);
 }
 
 bool Hotas4Sniffer::start()
