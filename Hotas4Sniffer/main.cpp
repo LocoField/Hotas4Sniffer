@@ -1,25 +1,15 @@
-#include "Hotas4Sniffer.h"
+#include "Dialog.h"
 
-#include <iostream>
+#include <QtWidgets/QApplication>
 
 using namespace std;
 
-int main()
+int main(int argc, char** argv)
 {
-	Hotas4Sniffer controller;
+	QApplication app(argc, argv);
 
-	if (controller.findDevice() == false)
-	{
-		cout << "Could NOT find the contoller." << endl;
-		return -1;
-	}
+	Dialog dialog;
+	dialog.loadOption();
 
-	controller.start();
-
-	while (controller.isRunning())
-	{
-		Sleep(1000);
-	}
-
-	return 0;
+	return dialog.exec();
 }
