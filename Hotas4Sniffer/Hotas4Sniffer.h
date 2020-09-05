@@ -3,6 +3,7 @@
 #include "Axis.h"
 
 #include <Windows.h>
+#include <functional>
 
 #define DEFAULT_SNAPSHOT_LENGTH             (65535)
 #define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024*1024)
@@ -25,7 +26,10 @@ protected:
 
 public:
 	void onAxisEvent(const Axis& axis);
-	void onButtonEvent(int buttonId);
+	void onButtonEvent(int type, int buttonId);
+
+	void setAxisEventCallback(std::function<void(const Axis&)> callback);
+	void setButtonEventCallback(std::function<void(int, int)> callback);
 
 private:
 	unsigned int snaplen = DEFAULT_SNAPSHOT_LENGTH;
@@ -37,5 +41,8 @@ private:
 	bool running = false;
 
 	Axis lastAxis;
+
+	std::function<void(const Axis&)> callbackAxisEvent = nullptr;
+	std::function<void(int, int)> callbackButtonEvent = nullptr;
 
 };

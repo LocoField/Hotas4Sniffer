@@ -273,8 +273,27 @@ void Hotas4Sniffer::onAxisEvent(const Axis& axis)
 {
 	printf("\n");
 	printf("Axis: %3.2f  %3.2f  %3.2f  \n", axis.roll, axis.pitch, axis.yaw);
+
+	if (callbackAxisEvent)
+	{
+		callbackAxisEvent(axis);
+	}
 }
 
-void Hotas4Sniffer::onButtonEvent(int buttonId)
+void Hotas4Sniffer::onButtonEvent(int type, int buttonId)
 {
+	if (callbackButtonEvent)
+	{
+		callbackButtonEvent(type, buttonId);
+	}
+}
+
+void Hotas4Sniffer::setAxisEventCallback(std::function<void(const Axis&)> callback)
+{
+	callbackAxisEvent = callback;
+}
+
+void Hotas4Sniffer::setButtonEventCallback(std::function<void(int, int)> callback)
+{
+	callbackButtonEvent = callback;
 }
