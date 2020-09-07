@@ -25,6 +25,7 @@
 
 #include <QtGui/QKeyEvent>
 
+#include <QtCore/QTimer>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonArray>

@@ -16,51 +16,137 @@ void Dialog::initialize()
 {
 	installEventFilter(this);
 
+	controller.setAxisEventCallback([this](const Axis& axis)
 	{
-		auto groupBox = new QGroupBox;
+		
 
-		settingLayout = new QVBoxLayout;
-		settingLayout->addWidget(groupBox);
+		needUpdateUI = true;
+	});
+
+	timerUpdateUI = new QTimer;
+	connect(timerUpdateUI, &QTimer::timeout, [this]()
+	{
+		if (needUpdateUI)
+			updateUI();
+
+		
+
+		needUpdateUI = false;
+	});
+
+	{
+		auto groupBox = new QGroupBox("Motor");
+
+		motorLayout = new QVBoxLayout;
+		motorLayout->addWidget(groupBox);
 
 		{
+			auto buttonConnect = new QPushButton("Connect");
+			buttonConnect->setCheckable(true);
+			buttonConnect->setFixedWidth(100);
+			buttonConnect->setFixedHeight(100);
+
+			auto buttonMoveCenter = new QPushButton("Move\nCenter");
+			buttonMoveCenter->setFixedWidth(100);
+			buttonMoveCenter->setFixedHeight(100);
+
+			auto buttonMoveZero = new QPushButton("Move\nZero");
+			buttonMoveZero->setFixedWidth(100);
+			buttonMoveZero->setFixedHeight(100);
+
+			connect(buttonConnect, &QPushButton::toggled, [](bool checked)
+			{
+				if (checked)
+				{
+
+				}
+				else
+				{
+
+				}
+			});
+
+			connect(buttonMoveCenter, &QPushButton::clicked, [this]()
+			{
+				if (timerUpdateUI->isActive())
+				{
+					return;
+				}
+
+				
+			});
+
+			connect(buttonMoveZero, &QPushButton::clicked, [this]()
+			{
+				if (timerUpdateUI->isActive())
+				{
+					return;
+				}
+
+				
+			});
+
 			auto layout = new QHBoxLayout;
+			layout->setAlignment(Qt::AlignLeft);
+			layout->addWidget(buttonConnect);
+			layout->addWidget(buttonMoveCenter);
+			layout->addWidget(buttonMoveZero);
 
-			auto button1 = new QPushButton("Controller");
-			button1->setCheckable(true);
-			button1->setFixedWidth(100);
-			button1->setFixedHeight(100);
+			groupBox->setLayout(layout);
+		}
+	}
 
-			auto button2 = new QPushButton("Motor");
-			button2->setFixedWidth(100);
-			button2->setFixedHeight(100);
+	{
+		auto groupBox = new QGroupBox("Controller");
 
-			connect(button1, &QPushButton::toggled, [this, button1](bool checked)
+		controllerLayout = new QVBoxLayout;
+		controllerLayout->addWidget(groupBox);
+
+		{
+			auto buttonStart = new QPushButton("Start");
+			buttonStart->setCheckable(true);
+			buttonStart->setFixedWidth(100);
+			buttonStart->setFixedHeight(100);
+
+			connect(buttonStart, &QPushButton::toggled, [this, buttonStart](bool checked)
 			{
 				if (checked)
 				{
 					if (controller.findDevice() == false || controller.start() == false)
 					{
-						button1->setChecked(false);
+						buttonStart->setChecked(false);
+						return;
 					}
+
+					timerUpdateUI->start();
 				}
 				else
 				{
 					controller.stop();
+					timerUpdateUI->stop();
 				}
 			});
 
-			layout->addWidget(button1);
-			layout->addWidget(button2);
+			auto layout = new QHBoxLayout;
+			layout->setAlignment(Qt::AlignLeft);
+			layout->addWidget(buttonStart);
 
 			groupBox->setLayout(layout);
 		}
 	}
 
 	mainLayout = new QVBoxLayout(this);
-	mainLayout->addLayout(settingLayout);
+	mainLayout->addLayout(motorLayout);
+	mainLayout->addLayout(controllerLayout);
+
+	setMinimumWidth(600);
 
 	setWindowTitle(DIALOG_TITLE);
 	setWindowFlag(Qt::WindowMinimizeButtonHint);
+}
+
+void Dialog::updateUI()
+{
 }
 
 bool Dialog::loadOption()

@@ -3,8 +3,9 @@
 #include "Hotas4Sniffer.h"
 
 #include <QtWidgets/QDialog>
-#include <QtWidgets/QBoxLayout>
 
+class QVBoxLayout;
+class QTimer;
 class QSerialPort;
 
 class Dialog : public QDialog
@@ -15,6 +16,7 @@ public:
 
 protected:
 	void initialize();
+	void updateUI();
 
 public:
 	bool loadOption();
@@ -26,9 +28,14 @@ private:
 
 private:
 	QVBoxLayout* mainLayout;
-	QVBoxLayout* settingLayout;
+	QVBoxLayout* motorLayout;
+	QVBoxLayout* controllerLayout;
 
 	Hotas4Sniffer controller;
+
+	// instead of using Q_OBJECT
+	QTimer* timerUpdateUI;
+	bool needUpdateUI = false;
 
 	std::vector<QSerialPort*> serialPorts;
 
