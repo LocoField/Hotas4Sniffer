@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Hotas4Sniffer.h"
 
 #include <stdio.h>

@@ -1,6 +1,5 @@
+#include "stdafx.h"
 #include "Dialog.h"
-
-#include <QtWidgets/QApplication>
 
 using namespace std;
 
