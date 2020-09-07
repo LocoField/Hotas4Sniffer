@@ -55,12 +55,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\_packages\dependencies\qt5-5.9.3\include;..\..\USBPcapHelper\bin</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
+      <AdditionalLibraryDirectories>C:\_packages\dependencies\qt5-5.9.3\lib;..\..\USBPcapHelper\bin</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -72,6 +74,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\_packages\dependencies\qt5-5.9.3\include;..\..\USBPcapHelper\bin</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -79,28 +82,16 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>setupapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\_packages\dependencies\qt5-5.9.3\lib;..\..\USBPcapHelper\bin</AdditionalLibraryDirectories>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="descriptors.cpp" />
-    <ClCompile Include="enum.cpp" />
-    <ClCompile Include="filters.cpp" />
     <ClCompile Include="Hotas4Sniffer.cpp" />
-    <ClCompile Include="iocontrol.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="roothubs.cpp" />
-    <ClCompile Include="thread.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Axis.h" />
-    <ClInclude Include="descriptors.h" />
-    <ClInclude Include="enum.h" />
-    <ClInclude Include="filters.h" />
     <ClInclude Include="Hotas4Sniffer.h" />
-    <ClInclude Include="iocontrol.h" />
-    <ClInclude Include="roothubs.h" />
-    <ClInclude Include="thread.h" />
-    <ClInclude Include="USBPcap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

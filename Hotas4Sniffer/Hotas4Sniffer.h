@@ -2,13 +2,16 @@
 
 #include "Axis.h"
 
-#include <Windows.h>
+#include <USBPCapHelper.h>
 #include <functional>
 
-#define DEFAULT_SNAPSHOT_LENGTH             (65535)
-#define DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE (1024*1024)
+#ifdef _DEBUG
+#pragma comment(lib, "USBPcapHelperd.lib")
+#else
+#pragma comment(lib, "USBPcapHelper.lib")
+#endif
 
-class Hotas4Sniffer
+class Hotas4Sniffer : public USBPcapHelper
 {
 public:
 	Hotas4Sniffer();
@@ -16,13 +19,9 @@ public:
 
 public:
 	bool findDevice();
-	bool start();
-	void stop();
-	bool isRunning();
 
 protected:
-	void readDataFromDevice();
-	void processData(unsigned char* data, DWORD bytes);
+	virtual void processInterruptData(unsigned char* buffer, DWORD bytes) override;
 
 public:
 	void onAxisEvent(const Axis& axis);
@@ -32,14 +31,6 @@ public:
 	void setButtonEventCallback(std::function<void(int, int)> callback);
 
 private:
-	unsigned int snaplen = DEFAULT_SNAPSHOT_LENGTH;
-	unsigned int bufferlen = DEFAULT_INTERNAL_KERNEL_BUFFER_SIZE;
-
-	char* deviceAddr = nullptr;
-	HANDLE deviceHandle;
-
-	bool running = false;
-
 	Axis lastAxis;
 
 	std::function<void(const Axis&)> callbackAxisEvent = nullptr;
