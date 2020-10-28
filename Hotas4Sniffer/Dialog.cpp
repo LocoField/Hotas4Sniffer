@@ -86,15 +86,18 @@ void Dialog::initialize()
 
 		{
 			auto buttonConnect = new QPushButton("Connect");
+			buttonConnect->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 			buttonConnect->setCheckable(true);
 			buttonConnect->setFixedWidth(100);
 			buttonConnect->setFixedHeight(100);
 
 			auto buttonMoveCenter = new QPushButton("Move\nCenter");
+			buttonMoveCenter->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 			buttonMoveCenter->setFixedWidth(100);
 			buttonMoveCenter->setFixedHeight(100);
 
 			auto buttonMoveZero = new QPushButton("Move\nZero");
+			buttonMoveZero->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 			buttonMoveZero->setFixedWidth(100);
 			buttonMoveZero->setFixedHeight(100);
 
@@ -148,6 +151,7 @@ void Dialog::initialize()
 
 		{
 			auto buttonStart = new QPushButton("Start");
+			buttonStart->setFocusPolicy(Qt::FocusPolicy::NoFocus);
 			buttonStart->setCheckable(true);
 			buttonStart->setFixedWidth(100);
 			buttonStart->setFixedHeight(100);
@@ -272,9 +276,54 @@ bool Dialog::eventFilter(QObject* object, QEvent* event)
 		{
 			return true;
 		}
+
+		if (event->type() == QEvent::KeyRelease)
+		{
+			keyPressEvent(keyEvent);
+			return true;
+		}
 	}
 
 	return __super::eventFilter(object, event);
+}
+
+void Dialog::keyPressEvent(QKeyEvent* event)
+{
+	if (event->isAutoRepeat())
+	{
+		return;
+	}
+
+	if (event->type() == QEvent::KeyRelease)
+	{
+		printf("center\n");
+	}
+	else
+	{
+		switch (event->key())
+		{
+			case Qt::Key_Left:
+			{
+				printf("left\n");
+				break;
+			}
+			case Qt::Key_Right:
+			{
+				printf("right\n");
+				break;
+			}
+			case Qt::Key_Up:
+			{
+				printf("up\n");
+				break;
+			}
+			case Qt::Key_Down:
+			{
+				printf("down\n");
+				break;
+			}
+		}
+	}
 }
 
 void Dialog::closeEvent(QCloseEvent* event)

@@ -24,6 +24,7 @@ public:
 
 private:
 	bool eventFilter(QObject* object, QEvent* event) override;
+	void keyPressEvent(QKeyEvent *) override;
 	void closeEvent(QCloseEvent* event) override;
 
 private:
