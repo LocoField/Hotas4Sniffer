@@ -23,6 +23,50 @@ void Dialog::initialize()
 		needUpdateUI = true;
 	});
 
+	controller.setLeftButtonsEventCallback([this](int buttons, int type)
+	{
+
+
+		needUpdateUI = true;
+	});
+
+	controller.setRightButtonsEventCallback([this](int buttons, int type)
+	{
+		// HAT buttons
+		switch (buttons)
+		{
+			case (int)RightButtons::SWITCH_HAT_CENTER:
+			{
+				printf("  C  %d  \n", rand());
+				break;
+			}
+			case (int)RightButtons::SWITCH_HAT_LEFT:
+			{
+				printf("  LEFT  \n");
+				break;
+			}
+			case (int)RightButtons::SWITCH_HAT_RIGHT:
+			{
+				printf("  RIGHT  \n");
+				break;
+			}
+			case (int)RightButtons::SWITCH_HAT_UP:
+			{
+				printf("  UP  \n");
+				break;
+			}
+			case (int)RightButtons::SWITCH_HAT_DOWN:
+			{
+				printf("  DOWN  \n");
+				break;
+			}
+		}
+
+		//Sleep(1000);
+
+		needUpdateUI = true;
+	});
+
 	timerUpdateUI = new QTimer;
 	connect(timerUpdateUI, &QTimer::timeout, [this]()
 	{
