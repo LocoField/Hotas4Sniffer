@@ -3,36 +3,6 @@
 
 #include <stdio.h>
 
-enum ButtonMap
-{
-	/* for buttons1 */
-	SWITCH_HAT_UP = 0,
-	SWITCH_HAT_UP_RIGHT = 1,
-	SWITCH_HAT_RIGHT = 2,
-	SWITCH_HAT_DOWN_RIGHT = 3,
-	SWITCH_HAT_DOWN = 4,
-	SWITCH_HAT_DOWN_LEFT = 5,
-	SWITCH_HAT_LEFT = 6,
-	SWITCH_HAT_UP_LEFT = 7,
-	SWITCH_HAT_CENTER = 8,
-
-	BUTTON_R1 = 10,
-	BUTTON_L1 = 20,
-	BUTTON_R3 = 40,
-	BUTTON_L3 = 80,
-
-	/* for buttons2 */
-	BUTTON_RECTANGLE = 1,
-	BUTTON_CROSS = 2,
-	BUTTON_CIRCLE = 4,
-	BUTTON_TRIANGLE = 8,
-
-	BUTTON_R2 = 10,
-	BUTTON_L2 = 20,
-	BUTTON_SHARE = 40,
-	BUTTON_OPTIONS = 80,
-};
-
 #pragma pack(push, 1)
 struct Hotas4Data
 {
@@ -78,13 +48,26 @@ void Hotas4Sniffer::processInterruptData(unsigned char* buffer, DWORD bytes)
 #endif
 
 	Axis currentAxis = Axis::fromHotas4Handle(data.handleX, data.handleY, data.twist);
-
 	if (lastAxis != currentAxis)
 	{
 		onAxisEvent(currentAxis);
 	}
 
+	int currentLeftButtons = data.buttons2;
+	if (lastButtonsLeft != currentLeftButtons)
+	{
+		onLeftButtonsEvent(currentLeftButtons);
+	}
+
+	int currentRightButtons = data.buttons1;
+	if (lastButtonsRight != currentRightButtons)
+	{
+		onRightButtonsEvent(currentRightButtons);
+	}
+
 	lastAxis = currentAxis;
+	lastButtonsLeft = currentLeftButtons;
+	lastButtonsRight = currentRightButtons;
 }
 
 void Hotas4Sniffer::onAxisEvent(const Axis& axis)
@@ -98,11 +81,19 @@ void Hotas4Sniffer::onAxisEvent(const Axis& axis)
 	}
 }
 
-void Hotas4Sniffer::onButtonEvent(int type, int buttonId)
+void Hotas4Sniffer::onLeftButtonsEvent(int buttons)
 {
-	if (callbackButtonEvent)
+	if (callbackLeftButtonsEvent)
 	{
-		callbackButtonEvent(type, buttonId);
+		callbackLeftButtonsEvent(buttons, 0);
+	}
+}
+
+void Hotas4Sniffer::onRightButtonsEvent(int buttons)
+{
+	if (callbackRightButtonsEvent)
+	{
+		callbackRightButtonsEvent(buttons, 0);
 	}
 }
 
@@ -111,7 +102,12 @@ void Hotas4Sniffer::setAxisEventCallback(std::function<void(const Axis&)> callba
 	callbackAxisEvent = callback;
 }
 
-void Hotas4Sniffer::setButtonEventCallback(std::function<void(int, int)> callback)
+void Hotas4Sniffer::setLeftButtonsEventCallback(std::function<void(int, int)> callback)
 {
-	callbackButtonEvent = callback;
+	callbackLeftButtonsEvent = callback;
+}
+
+void Hotas4Sniffer::setRightButtonsEventCallback(std::function<void(int, int)> callback)
+{
+	callbackRightButtonsEvent = callback;
 }
