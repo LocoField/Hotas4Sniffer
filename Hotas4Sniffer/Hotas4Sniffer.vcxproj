@@ -85,6 +85,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ACServoMotorHelper.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="Hotas4Sniffer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -94,6 +98,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ACServoMotorHelper.h" />
     <ClInclude Include="Axis.h" />
     <ClInclude Include="Dialog.h" />
     <ClInclude Include="Hotas4Sniffer.h" />
