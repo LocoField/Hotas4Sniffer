@@ -38,6 +38,7 @@ private:
 	QTimer* timerUpdateUI;
 	bool needUpdateUI = false;
 
+	std::vector<QString> portNames;
 	std::vector<QSerialPort*> serialPorts;
 
 };

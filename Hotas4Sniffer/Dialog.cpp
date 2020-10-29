@@ -200,11 +200,6 @@ void Dialog::updateUI()
 bool Dialog::loadOption()
 {
 	bool retval = true;
-	int n = 1;
-	int x = 500;
-	int y = 500;
-	int w = 600;
-	int h = 800;
 
 	QString filepath = QCoreApplication::applicationDirPath();
 	QFile loadFile(filepath + "/option.txt");
@@ -218,9 +213,13 @@ bool Dialog::loadOption()
 		}
 		else
 		{
-			QJsonObject object = doc.object();
+			QJsonArray optionArray = doc.array();
 
-			
+			for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
+			{
+				QJsonObject object = it->toObject();
+				portNames.push_back(object["port"].toString());
+			}
 		}
 
 		loadFile.close();
@@ -230,7 +229,7 @@ bool Dialog::loadOption()
 		retval = false;
 	}
 
-	for (int i = 0; i < n; i++)
+	for (size_t i = 0; i < portNames.size(); i++)
 	{
 		auto serialPort = new QSerialPort;
 		serialPorts.emplace_back(serialPort);
@@ -242,27 +241,26 @@ bool Dialog::loadOption()
 bool Dialog::saveOption()
 {
 	QString filepath = QCoreApplication::applicationDirPath();
-	QFile loadFile(filepath + "/option.txt");
+	QFile saveFile(filepath + "/option.txt");
 
-	if (loadFile.open(QIODevice::ReadOnly) == false)
+	QJsonDocument doc;
+	QJsonArray optionArray;
+
+	int i = 0;
+	for (auto& portName : portNames)
+	{
+		QJsonObject object;
+		object["port"] = portName;
+
+		optionArray.insert(i++, object);
+	}
+
+	if (saveFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == false)
 		return false;
 
-	QJsonDocument doc = QJsonDocument::fromJson(loadFile.readAll());
-	if (doc.isNull())
-		return false;
-
-	QJsonObject object = doc.object();
-
-	
-
-
-	loadFile.close();
-	if (loadFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == false)
-		return false;
-
-	doc.setObject(object);
-	loadFile.write(doc.toJson(QJsonDocument::JsonFormat::Indented));
-	loadFile.close();
+	doc.setArray(optionArray);
+	saveFile.write(doc.toJson(QJsonDocument::JsonFormat::Indented));
+	saveFile.close();
 
 	return true;
 }
