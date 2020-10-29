@@ -92,6 +92,7 @@
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="Hotas4Sniffer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SerialPort.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -102,6 +103,7 @@
     <ClInclude Include="Axis.h" />
     <ClInclude Include="Dialog.h" />
     <ClInclude Include="Hotas4Sniffer.h" />
+    <ClInclude Include="SerialPort.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

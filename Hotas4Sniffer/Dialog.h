@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Hotas4Sniffer.h"
+#include "SerialPort.h"
 
 #include <QtWidgets/QDialog>
 
 class QVBoxLayout;
 class QTimer;
-class QSerialPort;
 
 class Dialog : public QDialog
 {
@@ -38,6 +38,7 @@ private:
 	QTimer* timerUpdateUI;
 	bool needUpdateUI = false;
 
-	std::vector<QSerialPort*> serialPorts;
+	std::vector<QString> portNames;
+	std::vector<SerialPort*> serialPorts;
 
 };
