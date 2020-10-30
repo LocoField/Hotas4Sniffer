@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Dialog.h"
+#include "ACServoMotorHelper.h"
 
 #define DIALOG_TITLE "Motion Simulator by Hotas 4"
 
@@ -111,14 +112,21 @@ void Dialog::initialize()
 						if (serialPort->connect(portNames[i], 115200, QSerialPort::OddParity) == false)
 						{
 							printf("ERROR: motor connect failed: %d\n", i);
+							break;
 						}
 
 						i++;
 					}
-				}
-				else
-				{
 
+					if (i == serialPorts.size())
+					{
+						return;
+					}
+				}
+
+				for (auto& serialPort : serialPorts)
+				{
+					serialPort->disconnect();
 				}
 			});
 
@@ -129,7 +137,12 @@ void Dialog::initialize()
 					return;
 				}
 
-				
+				for (auto& serialPort : serialPorts)
+				{
+					serialPort->writeAndRead(ACServoMotorHelper::setPosition(0, 10000));
+					serialPort->writeAndRead(ACServoMotorHelper::trigger(0));
+					serialPort->writeAndRead(ACServoMotorHelper::normal());
+				}
 			});
 
 			connect(buttonMoveZero, &QPushButton::clicked, [this]()
