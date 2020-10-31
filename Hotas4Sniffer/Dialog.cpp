@@ -213,12 +213,19 @@ bool Dialog::loadOption()
 		}
 		else
 		{
-			QJsonArray optionArray = doc.array();
+			QJsonObject optionObject = doc.object();
+			QJsonArray optionArray = optionObject["motors"].toArray();
+
+			int numMotors = optionArray.size();
+			portNames.reserve(numMotors);
+			serialPorts.reserve(numMotors);
+			centerPositions.reserve(numMotors);
 
 			for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
 			{
 				QJsonObject object = it->toObject();
 				portNames.push_back(object["port"].toString());
+				centerPositions.push_back(object["offset"].toInt());
 			}
 		}
 
@@ -244,6 +251,7 @@ bool Dialog::saveOption()
 	QFile saveFile(filepath + "/option.txt");
 
 	QJsonDocument doc;
+	QJsonObject optionObject;
 	QJsonArray optionArray;
 
 	int i = 0;
@@ -251,14 +259,19 @@ bool Dialog::saveOption()
 	{
 		QJsonObject object;
 		object["port"] = portName;
+		object["offset"] = 10000;
 
 		optionArray.insert(i++, object);
 	}
 
+	optionObject["motors"] = optionArray;
+	optionObject["angle"] = 2000;
+	optionObject["speed"] = 1000;
+
 	if (saveFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == false)
 		return false;
 
-	doc.setArray(optionArray);
+	doc.setObject(optionObject);
 	saveFile.write(doc.toJson(QJsonDocument::JsonFormat::Indented));
 	saveFile.close();
 

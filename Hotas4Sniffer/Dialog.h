@@ -40,5 +40,9 @@ private:
 
 	std::vector<QString> portNames;
 	std::vector<QSerialPort*> serialPorts;
+	std::vector<int> centerPositions;
+
+	int angle = 2000; // difference
+	int speed = 1000; // rpm
 
 };
