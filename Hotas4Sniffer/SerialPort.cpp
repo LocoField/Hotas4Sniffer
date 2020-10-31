@@ -61,11 +61,11 @@ bool SerialPort::isConnected()
 	return __super::isOpen();
 }
 
-QByteArray SerialPort::writeAndRead(const std::vector<unsigned char>& data)
+std::vector<unsigned char> SerialPort::writeAndRead(const std::vector<unsigned char>& data)
 {
 	write({ (char*)data.data(), (int)data.size() });
 
-	QByteArray received;
+	std::vector<unsigned char> received;
 
 	while (1)
 	{
@@ -73,9 +73,9 @@ QByteArray SerialPort::writeAndRead(const std::vector<unsigned char>& data)
 		if (bytes.isEmpty())
 			break;
 
-		received.append(bytes);
+		received.insert(received.end(), bytes.cbegin(), bytes.cend());
 
-		int length = checkCompleteData({ received.cbegin(), received.cend() });
+		int length = checkCompleteData(received);
 		if (length == -1)
 			continue;
 

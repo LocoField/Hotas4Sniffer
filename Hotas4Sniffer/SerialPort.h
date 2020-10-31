@@ -19,7 +19,7 @@ public:
 	void disconnect();
 	bool isConnected();
 
-	QByteArray writeAndRead(const std::vector<unsigned char>& data);
+	std::vector<unsigned char> writeAndRead(const std::vector<unsigned char>& data);
 
 	qint64 write(const QByteArray& data);
 	QByteArray read(int timeout = 2000);

@@ -137,11 +137,11 @@ void Dialog::initialize()
 					return;
 				}
 
-				for (auto& serialPort : serialPorts)
+				for (size_t i = 0; i < serialPorts.size(); i++)
 				{
-					serialPort->writeAndRead(ACServoMotorHelper::setPosition(0, 10000));
-					serialPort->writeAndRead(ACServoMotorHelper::trigger(0));
-					serialPort->writeAndRead(ACServoMotorHelper::normal());
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::setPosition(0, centerPositions[i]));
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::trigger(0));
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::normal());
 				}
 			});
 
@@ -152,7 +152,12 @@ void Dialog::initialize()
 					return;
 				}
 
-				
+				for (size_t i = 0; i < serialPorts.size(); i++)
+				{
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::setPosition(0, -centerPositions[i]));
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::trigger(0));
+					serialPorts[i]->writeAndRead(ACServoMotorHelper::normal());
+				}
 			});
 
 			auto layout = new QHBoxLayout;
@@ -324,6 +329,30 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 	if (event->isAutoRepeat() || timerUpdateUI->isActive() == false)
 	{
 		return;
+	}
+
+	std::vector<int> currentPositions(serialPorts.size());
+
+	while (1)
+	{
+		for (size_t i = 0; i < serialPorts.size();)
+		{
+			auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
+
+			bool complete = false;
+			if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
+			{
+				printf("ERROR: getEncoderValue()\n");
+
+				for (auto& c : received)
+					printf("%x ", c);
+				printf("\n\n");
+
+				return;
+			}
+
+			if (complete) i++;
+		}
 	}
 
 	if (event->type() == QEvent::KeyRelease)
