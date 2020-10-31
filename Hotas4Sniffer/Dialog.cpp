@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Dialog.h"
+#include "ACServoMotorHelper.h"
 
 #define DIALOG_TITLE "Motion Simulator by Hotas 4"
 
@@ -101,15 +102,31 @@ void Dialog::initialize()
 			buttonMoveZero->setFixedWidth(100);
 			buttonMoveZero->setFixedHeight(100);
 
-			connect(buttonConnect, &QPushButton::toggled, [](bool checked)
+			connect(buttonConnect, &QPushButton::toggled, [this](bool checked)
 			{
 				if (checked)
 				{
+					int i = 0;
+					for (auto& serialPort : serialPorts)
+					{
+						if (serialPort->connect(portNames[i], 115200, QSerialPort::OddParity) == false)
+						{
+							printf("ERROR: motor connect failed: %d\n", i);
+							break;
+						}
 
+						i++;
+					}
+
+					if (i == serialPorts.size())
+					{
+						return;
+					}
 				}
-				else
-				{
 
+				for (auto& serialPort : serialPorts)
+				{
+					serialPort->disconnect();
 				}
 			});
 
@@ -120,7 +137,12 @@ void Dialog::initialize()
 					return;
 				}
 
-				
+				for (auto& serialPort : serialPorts)
+				{
+					serialPort->writeAndRead(ACServoMotorHelper::setPosition(0, 10000));
+					serialPort->writeAndRead(ACServoMotorHelper::trigger(0));
+					serialPort->writeAndRead(ACServoMotorHelper::normal());
+				}
 			});
 
 			connect(buttonMoveZero, &QPushButton::clicked, [this]()
@@ -162,8 +184,7 @@ void Dialog::initialize()
 				{
 					if (controller.findDevice() == false || controller.start() == false)
 					{
-						buttonStart->setChecked(false);
-						return;
+						printf("Controller start failed. Use keyboard instead.\n");
 					}
 
 					timerUpdateUI->start();
@@ -238,7 +259,7 @@ bool Dialog::loadOption()
 
 	for (size_t i = 0; i < portNames.size(); i++)
 	{
-		auto serialPort = new QSerialPort;
+		auto serialPort = new SerialPort;
 		serialPorts.emplace_back(serialPort);
 	}
 
@@ -300,7 +321,7 @@ bool Dialog::eventFilter(QObject* object, QEvent* event)
 
 void Dialog::keyPressEvent(QKeyEvent* event)
 {
-	if (event->isAutoRepeat())
+	if (event->isAutoRepeat() || timerUpdateUI->isActive() == false)
 	{
 		return;
 	}
