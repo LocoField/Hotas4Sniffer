@@ -38,11 +38,15 @@ private:
 	QTimer* timerUpdateUI;
 	bool needUpdateUI = false;
 
-	std::vector<QString> portNames;
 	std::vector<SerialPort*> serialPorts;
+	std::vector<QString> portNames = { "COM5" };
 	std::vector<int> centerPositions;
 
 	int angle = 2000; // difference
 	int speed = 1000; // rpm
+
+	// for keyboard
+	int pitchMoved = 0;
+	int rollMoved = 0;
 
 };

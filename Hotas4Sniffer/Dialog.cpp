@@ -7,6 +7,7 @@
 Dialog::Dialog()
 {
 	initialize();
+	loadOption();
 }
 
 Dialog::~Dialog()
@@ -111,7 +112,7 @@ void Dialog::initialize()
 					{
 						if (serialPort->connect(portNames[i], 115200, QSerialPort::OddParity) == false)
 						{
-							printf("ERROR: motor connect failed: %d\n", i);
+							printf("ERROR: motor connect failed: %s\n", portNames[i].toStdString().c_str());
 							break;
 						}
 
@@ -243,15 +244,17 @@ bool Dialog::loadOption()
 			QJsonArray optionArray = optionObject["motors"].toArray();
 
 			int numMotors = optionArray.size();
-			portNames.reserve(numMotors);
-			serialPorts.reserve(numMotors);
-			centerPositions.reserve(numMotors);
+			portNames.resize(numMotors);
+			centerPositions.resize(numMotors);
 
+			int index = 0;
 			for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
 			{
 				QJsonObject object = it->toObject();
-				portNames.push_back(object["port"].toString());
-				centerPositions.push_back(object["offset"].toInt());
+				portNames[index] = (object["port"].toString());
+				centerPositions[index] = (object["offset"].toInt());
+
+				index++;
 			}
 		}
 
@@ -261,6 +264,9 @@ bool Dialog::loadOption()
 	{
 		retval = false;
 	}
+
+
+	serialPorts.reserve(portNames.size());
 
 	for (size_t i = 0; i < portNames.size(); i++)
 	{
@@ -326,38 +332,63 @@ bool Dialog::eventFilter(QObject* object, QEvent* event)
 
 void Dialog::keyPressEvent(QKeyEvent* event)
 {
-	if (event->isAutoRepeat() || timerUpdateUI->isActive() == false)
+	if (timerUpdateUI->isActive() == false)
 	{
 		return;
 	}
 
-	std::vector<int> currentPositions(serialPorts.size());
-
-	while (1)
+	if (event->isAutoRepeat())
 	{
-		for (size_t i = 0; i < serialPorts.size();)
+		return;
+	}
+
+
+	std::vector<int> currentPositions(serialPorts.size());
+	bool completeAll = true;
+
+	for (size_t i = 0; i < serialPorts.size(); i++)
+	{
+		auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
+
+		bool complete = false;
+		if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
 		{
-			auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
+			printf("ERROR: getEncoderValue()\n");
 
-			bool complete = false;
-			if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
-			{
-				printf("ERROR: getEncoderValue()\n");
+			for (auto& c : received)
+				printf("%x ", c);
+			printf("\n\n");
 
-				for (auto& c : received)
-					printf("%x ", c);
-				printf("\n\n");
+			return;
+		}
 
-				return;
-			}
-
-			if (complete) i++;
+		if (complete == false)
+		{
+			completeAll = false;
+			break;
 		}
 	}
 
+
 	if (event->type() == QEvent::KeyRelease)
 	{
-		printf("center\n");
+		switch (event->key())
+		{
+			case Qt::Key_Left:
+			case Qt::Key_Right:
+			{
+				rollMoved = 0;
+
+				break;
+			}
+			case Qt::Key_Up:
+			case Qt::Key_Down:
+			{
+				pitchMoved = 0;
+
+				break;
+			}
+		}
 	}
 	else
 	{
@@ -365,21 +396,41 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		{
 			case Qt::Key_Left:
 			{
+				if (rollMoved != 0)
+					return;
+
+				rollMoved = true;
+
 				printf("left\n");
 				break;
 			}
 			case Qt::Key_Right:
 			{
+				if (rollMoved != 0)
+					return;
+
+				rollMoved = true;
+
 				printf("right\n");
 				break;
 			}
 			case Qt::Key_Up:
 			{
+				if (pitchMoved != 0)
+					return;
+
+				pitchMoved = true;
+
 				printf("up\n");
 				break;
 			}
 			case Qt::Key_Down:
 			{
+				if (pitchMoved != 0)
+					return;
+
+				pitchMoved = true;
+
 				printf("down\n");
 				break;
 			}
