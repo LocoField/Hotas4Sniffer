@@ -88,12 +88,12 @@ std::vector<unsigned char> SerialPort::writeAndRead(const std::vector<unsigned c
 	for (auto it = received.cbegin(); it != received.cend(); ++it)
 	{
 		unsigned char hex = *it;
-		QString hex_format = QString("%1 ").arg(hex, 2, 16, QLatin1Char('0'));
+		QString hex_format = QString(" %1").arg(hex, 2, 16, QLatin1Char('0'));
 
 		command.append(hex_format);
 	}
 
-	cout << "recv: " << command.toStdString() << endl;
+	cout << "<--" << command.toStdString() << endl;
 #endif
 
 	return received;

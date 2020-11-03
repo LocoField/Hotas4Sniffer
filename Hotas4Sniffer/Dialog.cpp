@@ -110,7 +110,7 @@ void Dialog::initialize()
 					int i = 0;
 					for (auto& serialPort : serialPorts)
 					{
-						if (serialPort->connect(portNames[i], 115200, QSerialPort::OddParity) == false)
+						if (serialPort->connect(portNames[i]) == false)
 						{
 							printf("ERROR: motor connect failed: %s\n", portNames[i].toStdString().c_str());
 							break;
@@ -270,7 +270,7 @@ bool Dialog::loadOption()
 
 	for (size_t i = 0; i < portNames.size(); i++)
 	{
-		auto serialPort = new SerialPort;
+		auto serialPort = new ACServoMotorSerial;
 		serialPorts.emplace_back(serialPort);
 	}
 
@@ -444,6 +444,7 @@ void Dialog::closeEvent(QCloseEvent* event)
 
 	for (auto& serialPort : serialPorts)
 	{
+		serialPort->disconnect();
 		delete serialPort;
 	}
 

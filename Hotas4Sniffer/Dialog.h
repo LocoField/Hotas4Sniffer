@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Hotas4Sniffer.h"
-#include "SerialPort.h"
+#include "ACServoMotorSerial.h"
 
 #include <QtWidgets/QDialog>
 
@@ -38,7 +38,7 @@ private:
 	QTimer* timerUpdateUI;
 	bool needUpdateUI = false;
 
-	std::vector<SerialPort*> serialPorts;
+	std::vector<ACServoMotorSerial*> serialPorts;
 	std::vector<QString> portNames = { "COM5" };
 	std::vector<int> centerPositions;
 
