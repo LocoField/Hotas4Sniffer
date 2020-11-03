@@ -342,48 +342,42 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		return;
 	}
 
-
-	std::vector<int> currentPositions(serialPorts.size());
-	bool completeAll = true;
-
-	for (size_t i = 0; i < serialPorts.size(); i++)
-	{
-		auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
-
-		bool complete = false;
-		if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
-		{
-			printf("ERROR: getEncoderValue()\n");
-
-			for (auto& c : received)
-				printf("%x ", c);
-			printf("\n\n");
-
-			return;
-		}
-
-		if (complete == false)
-		{
-			completeAll = false;
-			break;
-		}
-	}
-
-
 	if (event->type() == QEvent::KeyRelease)
 	{
 		switch (event->key())
 		{
 			case Qt::Key_Left:
+			{
+				if (rollMoved != -1)
+					return;
+
+				rollMoved = 0;
+
+				break;
+			}
 			case Qt::Key_Right:
 			{
+				if (rollMoved != 1)
+					return;
+
 				rollMoved = 0;
 
 				break;
 			}
 			case Qt::Key_Up:
+			{
+				if (pitchMoved != -1)
+					return;
+
+				pitchMoved = 0;
+
+				break;
+			}
 			case Qt::Key_Down:
 			{
+				if (pitchMoved != 1)
+					return;
+
 				pitchMoved = 0;
 
 				break;
@@ -399,7 +393,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 				if (rollMoved != 0)
 					return;
 
-				rollMoved = true;
+				rollMoved = -1;
 
 				printf("left\n");
 				break;
@@ -409,7 +403,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 				if (rollMoved != 0)
 					return;
 
-				rollMoved = true;
+				rollMoved = 1;
 
 				printf("right\n");
 				break;
@@ -419,7 +413,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 				if (pitchMoved != 0)
 					return;
 
-				pitchMoved = true;
+				pitchMoved = -1;
 
 				printf("up\n");
 				break;
@@ -429,13 +423,46 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 				if (pitchMoved != 0)
 					return;
 
-				pitchMoved = true;
+				pitchMoved = 1;
 
 				printf("down\n");
 				break;
 			}
 		}
 	}
+
+	std::vector<int> currentPositions(serialPorts.size());
+	int completeAll = 0;
+
+	for (size_t i = 0; i < serialPorts.size(); i++)
+	{
+		if (serialPorts[i]->isConnected() == false)
+			break;
+
+		auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
+
+		bool complete = false;
+		if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
+		{
+			printf("ERROR: getEncoderValue()\n");
+
+			for (auto& c : received)
+				printf("%x ", c);
+			printf("\n\n");
+
+			return;
+		}
+
+		if (complete == false)
+			break;
+
+		completeAll++;
+	}
+
+	if (completeAll != serialPorts.size())
+		return;
+
+	
 }
 
 void Dialog::closeEvent(QCloseEvent* event)
