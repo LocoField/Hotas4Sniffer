@@ -15,22 +15,22 @@ protected:
 
 public:
 	static int getDataLength(const Command& data);
-	static bool checkWriteRegisters(const Command& data);
+	static bool checkRegistersWritten(const Command& data);
 
 	static bool getCycleValue(const Command& data, int& cycle); // high * 10000 + low
 	static bool getParamValue(const Command& data, int& value);
 	static bool getEncoderValue(const Command& data, int& position, bool& complete); // high + low * 2500
 
-	static Command readCycles(int index);
-	static Command readGear(); // TODO: refactoring
-	static Command readEncoder();
+	static Command readCycles(int address = 1, int index = 0);
+	static Command readGear(int address = 1); // TODO: refactoring
+	static Command readEncoder(int address = 1);
 
-	static Command setPosition(int index, int cycle);
+	static Command setPosition(int cycle, int address = 1, int index = 0);
 
-	static Command stop(int index);
-	static Command trigger(int index);
-	static Command normal();
+	static Command stop(int address = 1, int index = 0);
+	static Command trigger(int address = 1, int index = 0);
+	static Command normal(int address = 1);
 
-	static Command emergency(bool on);
+	static Command emergency(bool on, int address = 1);
 
 };

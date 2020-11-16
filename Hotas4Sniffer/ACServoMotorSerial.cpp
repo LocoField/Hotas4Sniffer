@@ -13,5 +13,5 @@ int ACServoMotorSerial::checkCompleteData(const std::vector<unsigned char>& data
 
 bool ACServoMotorSerial::connect(QString portName)
 {
-	return __super::connect(portName, 115200, QSerialPort::OddParity);
+	return __super::connect(portName, 115200, QSerialPort::OddParity, QSerialPort::OneStop);
 }

@@ -15,7 +15,7 @@ protected:
 	virtual int checkCompleteData(const std::vector<unsigned char>& data) { return 0; }
 
 public:
-	bool connect(QString portName, int baudRate, int mode = 0);
+	bool connect(QString portName, int baudRate, QSerialPort::Parity parity, QSerialPort::StopBits stopBits);
 	void disconnect();
 	bool isConnected();
 

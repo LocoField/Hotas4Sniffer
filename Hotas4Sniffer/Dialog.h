@@ -38,8 +38,10 @@ private:
 	QTimer* timerUpdateUI;
 	bool needUpdateUI = false;
 
-	std::vector<ACServoMotorSerial*> serialPorts;
-	std::vector<QString> portNames = { "COM5" };
+	ACServoMotorSerial motor;
+	QString portName;
+
+	int numMotors = 0;
 	std::vector<int> centerPositions;
 
 	int angle = 2000; // difference

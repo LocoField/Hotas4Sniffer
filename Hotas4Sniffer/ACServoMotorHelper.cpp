@@ -62,7 +62,7 @@ int ACServoMotorHelper::getDataLength(const Command& data)
 	return minimumLength + dataSize;
 }
 
-bool ACServoMotorHelper::checkWriteRegisters(const Command& data)
+bool ACServoMotorHelper::checkRegistersWritten(const Command& data)
 {
 	if (data.size() < 8)
 		return false;
@@ -142,31 +142,36 @@ bool ACServoMotorHelper::getEncoderValue(const Command& data, int& position, boo
 	return true;
 }
 
-Command ACServoMotorHelper::readCycles(int index)
+Command ACServoMotorHelper::readCycles(int address, int index)
 {
-	Command data = { 0x01, 0x03, 0x00, (unsigned char)(120 + index * 2), 0x00, 0x02 }; // Pn120 and Pn121 ~
+	Command data;
+
+	if (index < 0 || 3 < index)
+		return data;
+
+	data = { (unsigned char)address, 0x03, 0x00, (unsigned char)(120 + index * 2), 0x00, 0x02 }; // Pn120 and Pn121 ~
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::readGear()
+Command ACServoMotorHelper::readGear(int address)
 {
-	Command data = { 0x01, 0x03, 0x00, 98, 0x00, 0x01 }; // Pn98: electron gear ratio
+	Command data = { (unsigned char)address, 0x03, 0x00, 98, 0x00, 0x01 }; // Pn98: electron gear ratio
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::readEncoder()
+Command ACServoMotorHelper::readEncoder(int address)
 {
-	Command data = { 0x01, 0x03, 0x01, 0x82, 0x00, 0x03 }; // Dn018 to Dn020
+	Command data = { (unsigned char)address, 0x03, 0x01, 0x82, 0x00, 0x03 }; // Dn018 to Dn020
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::setPosition(int index, int cycle)
+Command ACServoMotorHelper::setPosition(int cycle, int address, int index)
 {
 	Command data;
 
@@ -176,7 +181,7 @@ Command ACServoMotorHelper::setPosition(int index, int cycle)
 	short high = cycle / 10000;
 	short low = cycle % 10000;
 
-	data = { 0x01, 0x10, 0x00, (unsigned char)(120 + index * 2), 0x00, 0x02, 0x04 };
+	data = { (unsigned char)address, 0x10, 0x00, (unsigned char)(120 + index * 2), 0x00, 0x02, 0x04 };
 	data.push_back((high >> 8) & 0xFF);
 	data.push_back((high & 0xFF));
 	data.push_back((low >> 8) & 0xFF);
@@ -186,7 +191,7 @@ Command ACServoMotorHelper::setPosition(int index, int cycle)
 	return data;
 }
 
-Command ACServoMotorHelper::stop(int index)
+Command ACServoMotorHelper::stop(int address, int index)
 {
 	Command data;
 
@@ -226,13 +231,13 @@ Command ACServoMotorHelper::stop(int index)
 	}
 
 	auto value = pn71.to_ulong();
-	data = { 0x01, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
+	data = { (unsigned char)address, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::trigger(int index)
+Command ACServoMotorHelper::trigger(int address, int index)
 {
 	Command data;
 
@@ -272,28 +277,28 @@ Command ACServoMotorHelper::trigger(int index)
 	}
 
 	auto value = pn71.to_ulong();
-	data = { 0x01, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
+	data = { (unsigned char)address, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::normal()
+Command ACServoMotorHelper::normal(int address)
 {
 	Command data;
 
 	std::bitset<16> pn71 = 0x7fff;
 
 	auto value = pn71.to_ulong();
-	data = { 0x01, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
+	data = { (unsigned char)address, 0x06, 0x00, 71, (unsigned char)((value >> 8) & 0xFF), (unsigned char)(value & 0xFF) };
 
 	calculateCRC(data);
 	return data;
 }
 
-Command ACServoMotorHelper::emergency(bool on)
+Command ACServoMotorHelper::emergency(bool on, int address)
 {
-	Command data = { 0x01, 0x06, 0x00, 0x46, 0x7F };
+	Command data = { (unsigned char)address, 0x06, 0x00, 0x46, 0x7F };
 
 	if (on) data.push_back(0xF2);
 	else data.push_back(0xB2);

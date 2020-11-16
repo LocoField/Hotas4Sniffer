@@ -103,31 +103,31 @@ void Dialog::initialize()
 			buttonMoveZero->setFixedWidth(100);
 			buttonMoveZero->setFixedHeight(100);
 
-			connect(buttonConnect, &QPushButton::toggled, [this](bool checked)
+			connect(buttonConnect, &QPushButton::toggled, [this, buttonConnect](bool checked)
 			{
 				if (checked)
 				{
-					int i = 0;
-					for (auto& serialPort : serialPorts)
-					{
-						if (serialPort->connect(portNames[i]) == false)
-						{
-							printf("ERROR: motor connect failed: %s\n", portNames[i].toStdString().c_str());
-							break;
-						}
+					bool connect = motor.connect(portName);
+					numMotors = (int)centerPositions.size();
 
-						i++;
-					}
-
-					if (i == serialPorts.size())
+					if (connect == false)
 					{
+						printf("ERROR: motor connect failed: %s\n", portName.toStdString().c_str());
+
+						buttonConnect->setChecked(false);
 						return;
 					}
-				}
 
-				for (auto& serialPort : serialPorts)
+					if (numMotors == 0)
+					{
+						printf("WARNING: numMotors is zero.\n");
+					}
+				}
+				else
 				{
-					serialPort->disconnect();
+					motor.disconnect();
+
+					numMotors = 0;
 				}
 			});
 
@@ -138,11 +138,11 @@ void Dialog::initialize()
 					return;
 				}
 
-				for (size_t i = 0; i < serialPorts.size(); i++)
+				for (int i = 0; i < numMotors; i++)
 				{
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::setPosition(0, centerPositions[i]));
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::trigger(0));
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::normal());
+					motor.writeAndRead(ACServoMotorHelper::setPosition(centerPositions[i], i + 1));
+					motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
+					motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
 				}
 			});
 
@@ -153,11 +153,11 @@ void Dialog::initialize()
 					return;
 				}
 
-				for (size_t i = 0; i < serialPorts.size(); i++)
+				for (int i = 0; i < numMotors; i++)
 				{
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::setPosition(0, -centerPositions[i]));
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::trigger(0));
-					serialPorts[i]->writeAndRead(ACServoMotorHelper::normal());
+					motor.writeAndRead(ACServoMotorHelper::setPosition(-centerPositions[i], i + 1));
+					motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
+					motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
 				}
 			});
 
@@ -241,21 +241,26 @@ bool Dialog::loadOption()
 		else
 		{
 			QJsonObject optionObject = doc.object();
+
+			angle = optionObject["angle"].toInt();
+
 			QJsonArray optionArray = optionObject["motors"].toArray();
-
-			int numMotors = optionArray.size();
-			portNames.resize(numMotors);
-			centerPositions.resize(numMotors);
-
-			int index = 0;
-			for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
 			{
-				QJsonObject object = it->toObject();
-				portNames[index] = (object["port"].toString());
-				centerPositions[index] = (object["offset"].toInt());
+				int numMotors = optionArray.size();
+				centerPositions.resize(numMotors);
 
-				index++;
+				int index = 0;
+				for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
+				{
+					QJsonObject object = it->toObject();
+					centerPositions[index] = (object["offset"].toInt());
+
+					index++;
+				}
 			}
+
+			portName = optionObject["port"].toString();
+			speed = optionObject["speed"].toInt();
 		}
 
 		loadFile.close();
@@ -263,15 +268,6 @@ bool Dialog::loadOption()
 	else
 	{
 		retval = false;
-	}
-
-
-	serialPorts.reserve(portNames.size());
-
-	for (size_t i = 0; i < portNames.size(); i++)
-	{
-		auto serialPort = new ACServoMotorSerial;
-		serialPorts.emplace_back(serialPort);
 	}
 
 	return retval;
@@ -286,19 +282,18 @@ bool Dialog::saveOption()
 	QJsonObject optionObject;
 	QJsonArray optionArray;
 
-	int i = 0;
-	for (auto& portName : portNames)
+	for (int i = 0; i < (int)centerPositions.size(); i++)
 	{
 		QJsonObject object;
-		object["port"] = portName;
-		object["offset"] = 10000;
+		object["offset"] = centerPositions[i];
 
-		optionArray.insert(i++, object);
+		optionArray.insert(i, object);
 	}
 
+	optionObject["angle"] = angle;
 	optionObject["motors"] = optionArray;
-	optionObject["angle"] = 2000;
-	optionObject["speed"] = 1000;
+	optionObject["port"] = portName;
+	optionObject["speed"] = speed;
 
 	if (saveFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == false)
 		return false;
@@ -431,15 +426,16 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		}
 	}
 
-	std::vector<int> currentPositions(serialPorts.size());
+
+	if (motor.isConnected() == false)
+		return;
+
+	std::vector<int> currentPositions(numMotors);
 	int completeAll = 0;
 
-	for (size_t i = 0; i < serialPorts.size(); i++)
+	for (int i = 0; i < numMotors; i++)
 	{
-		if (serialPorts[i]->isConnected() == false)
-			break;
-
-		auto received = serialPorts[i]->writeAndRead(ACServoMotorHelper::readEncoder());
+		auto received = motor.writeAndRead(ACServoMotorHelper::readEncoder(i + 1));
 
 		bool complete = false;
 		if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
@@ -459,7 +455,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		completeAll++;
 	}
 
-	if (completeAll != serialPorts.size())
+	if (completeAll != numMotors)
 		return;
 
 	
@@ -468,14 +464,6 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 void Dialog::closeEvent(QCloseEvent* event)
 {
 	saveOption();
-
-	for (auto& serialPort : serialPorts)
-	{
-		serialPort->disconnect();
-		delete serialPort;
-	}
-
-	serialPorts.clear();
 
 	__super::closeEvent(event);
 }

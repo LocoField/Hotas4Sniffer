@@ -25,28 +25,14 @@ void SerialPort::availablePorts(std::vector<QString>& ports)
 	});
 }
 
-bool SerialPort::connect(QString portName, int baudRate, int mode)
+bool SerialPort::connect(QString portName, int baudRate, QSerialPort::Parity parity, QSerialPort::StopBits stopBits)
 {
 	setPortName(portName);
 	setBaudRate(baudRate);
 	setDataBits(QSerialPort::Data8);
+	setParity(parity);
+	setStopBits(stopBits);
 	setFlowControl(QSerialPort::NoFlowControl);
-	setParity(QSerialPort::NoParity);
-	setStopBits(QSerialPort::OneStop);
-
-	switch (mode)
-	{
-		case 1:
-		{
-			setParity(QSerialPort::EvenParity);
-			break;
-		}
-		case 2:
-		{
-			setParity(QSerialPort::OddParity);
-			break;
-		}
-	}
 
 	return __super::open(QIODevice::ReadWrite);
 }
