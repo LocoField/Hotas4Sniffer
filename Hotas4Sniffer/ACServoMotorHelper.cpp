@@ -138,7 +138,7 @@ bool ACServoMotorHelper::getEncoderValue(const Command& data, int& position, boo
 	short encoder_high = (data[5] << 8) | data[6];
 	short encoder_low = (data[7] << 8) | data[8];
 
-	position = encoder_high + encoder_low * 2500;
+	position = encoder_high + encoder_low * 10000;
 	return true;
 }
 
