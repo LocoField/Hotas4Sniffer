@@ -337,6 +337,8 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		return;
 	}
 
+	int heave = 0;
+
 	if (event->type() == QEvent::KeyRelease)
 	{
 		switch (event->key())
@@ -383,6 +385,22 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 	{
 		switch (event->key())
 		{
+			case Qt::Key_W:
+			{
+				heave = 1;
+
+				printf("heave up\n");
+
+				break;
+			}
+			case Qt::Key_S:
+			{
+				heave = -1;
+
+				printf("heave down\n");
+
+				break;
+			}
 			case Qt::Key_Left:
 			{
 				if (rollMoved != 0)
@@ -431,7 +449,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		return;
 
 	std::vector<int> currentPositions(numMotors);
-	int completeAll = 0;
+	int completeCount = 0;
 
 	for (int i = 0; i < numMotors; i++)
 	{
@@ -449,16 +467,41 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 			return;
 		}
 
-		if (complete == false)
-			break;
+		printf("%6d    ", currentPositions[i]);
 
-		completeAll++;
+		if (complete)
+			completeCount++;
 	}
 
-	if (completeAll != numMotors)
-		return;
+	printf("\n");
 
-	
+	if (completeCount != numMotors)
+	{
+		printf("Motors are moving.\n");
+
+		return;
+	}
+
+
+	// TODO: 모터가 2개인 경우 heave 값은 무시한다.
+
+	std::vector<int> cycleValues(numMotors);
+
+	for (int i = 0; i < numMotors; i++)
+	{
+		cycleValues[i] += heave * 5000;
+	}
+
+	for (int i = 0; i < numMotors; i++)
+	{
+		motor.writeAndRead(ACServoMotorHelper::setPosition(cycleValues[i] * reverseOption, i + 1));
+	}
+
+	for (int i = 0; i < numMotors; i++)
+	{
+		motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
+		motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+	}
 }
 
 void Dialog::closeEvent(QCloseEvent* event)
