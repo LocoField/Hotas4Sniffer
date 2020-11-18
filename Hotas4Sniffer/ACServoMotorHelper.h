@@ -26,6 +26,7 @@ public:
 	static Command readEncoder(int address = 1);
 
 	static Command setPosition(int cycle, int address = 1, int index = 0);
+	static Command setSpeed(int speed, int address = 1, int index = 0);
 
 	static Command stop(int address = 1, int index = 0);
 	static Command trigger(int address = 1, int index = 0);

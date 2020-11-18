@@ -191,6 +191,22 @@ Command ACServoMotorHelper::setPosition(int cycle, int address, int index)
 	return data;
 }
 
+Command ACServoMotorHelper::setSpeed(int speed, int address, int index)
+{
+	Command data;
+
+	if (index < 0 || 3 < index)
+		return data;
+
+	if (speed < 0 || 3000 < speed)
+		return data;
+
+	data = { (unsigned char)address, 0x06, 0x00, (unsigned char)(128 + index), (unsigned char)((speed >> 8) & 0xFF), (unsigned char)(speed & 0xFF) };
+
+	calculateCRC(data);
+	return data;
+}
+
 Command ACServoMotorHelper::stop(int address, int index)
 {
 	Command data;
