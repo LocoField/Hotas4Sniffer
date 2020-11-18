@@ -108,7 +108,6 @@ void Dialog::initialize()
 				if (checked)
 				{
 					bool connect = motor.connect(portName);
-					numMotors = (int)centerPositions.size();
 
 					if (connect == false)
 					{
@@ -118,9 +117,17 @@ void Dialog::initialize()
 						return;
 					}
 
-					if (numMotors == 0)
+					for (int i = 0; i < numMotors; i++)
 					{
-						printf("WARNING: numMotors is zero.\n");
+						auto data = motor.writeAndRead(ACServoMotorHelper::setSpeed(speed, i + 1));
+
+						if (data.empty())
+						{
+							printf("ERROR: motor command failed: %d\n", i);
+
+							buttonConnect->setChecked(false);
+							return;
+						}
 					}
 				}
 				else
@@ -246,14 +253,16 @@ bool Dialog::loadOption()
 
 			QJsonArray optionArray = optionObject["motors"].toArray();
 			{
-				int numMotors = optionArray.size();
+				numMotors = optionArray.size();
 				centerPositions.resize(numMotors);
+				limitPositions.resize(numMotors);
 
 				int index = 0;
 				for (auto it = optionArray.begin(); it != optionArray.end(); ++it)
 				{
 					QJsonObject object = it->toObject();
-					centerPositions[index] = (object["offset"].toInt());
+					centerPositions[index] = object["offset"].toInt();
+					limitPositions[index] = object["limit"].toInt();
 
 					index++;
 				}
@@ -282,10 +291,11 @@ bool Dialog::saveOption()
 	QJsonObject optionObject;
 	QJsonArray optionArray;
 
-	for (int i = 0; i < (int)centerPositions.size(); i++)
+	for (int i = 0; i < numMotors; i++)
 	{
 		QJsonObject object;
 		object["offset"] = centerPositions[i];
+		object["limit"] = limitPositions[i];
 
 		optionArray.insert(i, object);
 	}
@@ -489,12 +499,18 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		cycleValues[i] += heave * 5000;
+		cycleValues[i] += heave * 10000;
 	}
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		motor.writeAndRead(ACServoMotorHelper::setPosition(cycleValues[i] * reverseOption, i + 1));
+		int cycle = cycleValues[i] * reverseOption;
+
+		if (currentPositions[i] + cycle < 0 ||
+			currentPositions[i] + cycle >= limitPositions[i])
+			cycle = 0;
+
+		motor.writeAndRead(ACServoMotorHelper::setPosition(cycle, i + 1));
 	}
 
 	for (int i = 0; i < numMotors; i++)

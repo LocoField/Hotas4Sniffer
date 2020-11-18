@@ -43,6 +43,7 @@ private:
 
 	int numMotors = 0;
 	std::vector<int> centerPositions;
+	std::vector<int> limitPositions;
 
 	int angle = 10000; // difference
 	int speed = 1000; // rpm
