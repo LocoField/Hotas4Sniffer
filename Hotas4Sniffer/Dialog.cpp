@@ -93,15 +93,11 @@ void Dialog::initialize()
 			buttonConnect->setFixedWidth(100);
 			buttonConnect->setFixedHeight(100);
 
-			auto buttonMoveCenter = new QPushButton("Move\nCenter");
+			auto buttonMoveCenter = new QPushButton("Motor\n\nInitialize");
 			buttonMoveCenter->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+			buttonMoveCenter->setCheckable(true);
 			buttonMoveCenter->setFixedWidth(100);
 			buttonMoveCenter->setFixedHeight(100);
-
-			auto buttonMoveZero = new QPushButton("Move\nZero");
-			buttonMoveZero->setFocusPolicy(Qt::FocusPolicy::NoFocus);
-			buttonMoveZero->setFixedWidth(100);
-			buttonMoveZero->setFixedHeight(100);
 
 			connect(buttonConnect, &QPushButton::toggled, [this, buttonConnect](bool checked)
 			{
@@ -138,33 +134,40 @@ void Dialog::initialize()
 				}
 			});
 
-			connect(buttonMoveCenter, &QPushButton::clicked, [this]()
+			connect(buttonMoveCenter, &QPushButton::clicked, [this](bool checked)
 			{
-				if (timerUpdateUI->isActive())
+				if (checked)
 				{
-					return;
+					for (int i = 0; i < numMotors; i++)
+					{
+						motor.writeAndRead(ACServoMotorHelper::setPosition(centerPositions[i], i + 1));
+						motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
+						motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+					}
 				}
-
-				for (int i = 0; i < numMotors; i++)
+				else
 				{
-					motor.writeAndRead(ACServoMotorHelper::setPosition(centerPositions[i], i + 1));
-					motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
-					motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
-				}
-			});
+					for (int i = 0; i < numMotors; i++)
+					{
+						auto received = motor.writeAndRead(ACServoMotorHelper::readEncoder(i + 1));
 
-			connect(buttonMoveZero, &QPushButton::clicked, [this]()
-			{
-				if (timerUpdateUI->isActive())
-				{
-					return;
-				}
+						int position = 0;
+						bool complete = false;
+						if (ACServoMotorHelper::getEncoderValue(received, position, complete) == false)
+						{
+							printf("ERROR: getEncoderValue()\n");
 
-				for (int i = 0; i < numMotors; i++)
-				{
-					motor.writeAndRead(ACServoMotorHelper::setPosition(-centerPositions[i], i + 1));
-					motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
-					motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+							for (auto& c : received)
+								printf("%x ", c);
+							printf("\n\n");
+
+							return;
+						}
+
+						motor.writeAndRead(ACServoMotorHelper::setPosition(-position, i + 1));
+						motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
+						motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+					}
 				}
 			});
 
@@ -172,7 +175,6 @@ void Dialog::initialize()
 			layout->setAlignment(Qt::AlignLeft);
 			layout->addWidget(buttonConnect);
 			layout->addWidget(buttonMoveCenter);
-			layout->addWidget(buttonMoveZero);
 
 			groupBox->setLayout(layout);
 		}
