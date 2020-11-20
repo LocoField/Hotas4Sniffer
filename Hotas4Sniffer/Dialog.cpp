@@ -103,28 +103,16 @@ void Dialog::initialize()
 			{
 				if (checked)
 				{
-					bool connect = motor.connect(portName);
+					bool connect = motor.connect(portName, numMotors);
 
 					if (connect == false)
 					{
-						printf("ERROR: motor connect failed: %s\n", portName.toStdString().c_str());
-
 						buttonConnect->setChecked(false);
+
 						return;
 					}
 
-					for (int i = 0; i < numMotors; i++)
-					{
-						auto data = motor.writeAndRead(ACServoMotorHelper::setSpeed(speed, i + 1));
-
-						if (data.empty())
-						{
-							printf("ERROR: motor command failed: %d\n", i);
-
-							buttonConnect->setChecked(false);
-							return;
-						}
-					}
+					motor.setSpeed(speed);
 				}
 				else
 				{
@@ -140,33 +128,24 @@ void Dialog::initialize()
 				{
 					for (int i = 0; i < numMotors; i++)
 					{
-						motor.writeAndRead(ACServoMotorHelper::setPosition(centerPositions[i], i + 1));
-						motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
-						motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+						motor.setPosition(centerPositions[i], i);
 					}
 				}
 				else
 				{
-					for (int i = 0; i < numMotors; i++)
+					for (int i = 0; i < numMotors;)
 					{
-						auto received = motor.writeAndRead(ACServoMotorHelper::readEncoder(i + 1));
-
 						int position = 0;
-						bool complete = false;
-						if (ACServoMotorHelper::getEncoderValue(received, position, complete) == false)
-						{
-							printf("ERROR: getEncoderValue()\n");
+						bool moving = true;
 
-							for (auto& c : received)
-								printf("%x ", c);
-							printf("\n\n");
+						motor.position(i, position, moving);
 
-							return;
-						}
+						if (moving)
+							continue;
 
-						motor.writeAndRead(ACServoMotorHelper::setPosition(-position, i + 1));
-						motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
-						motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
+						motor.setPosition(-position, i);
+
+						i++;
 					}
 				}
 			});
@@ -465,23 +444,13 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		auto received = motor.writeAndRead(ACServoMotorHelper::readEncoder(i + 1));
+		bool moving = true;
 
-		bool complete = false;
-		if (ACServoMotorHelper::getEncoderValue(received, currentPositions[i], complete) == false)
-		{
-			printf("ERROR: getEncoderValue()\n");
-
-			for (auto& c : received)
-				printf("%x ", c);
-			printf("\n\n");
-
-			return;
-		}
+		motor.position(i, currentPositions[i], moving);
 
 		printf("%6d    ", currentPositions[i]);
 
-		if (complete)
+		if (moving == false)
 			completeCount++;
 	}
 
@@ -506,25 +475,19 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		int cycle = cycleValues[i] * reverseOption;
+		int position = cycleValues[i] * reverseOption;
 
-		if (currentPositions[i] + cycle < 0 ||
-			currentPositions[i] + cycle >= limitPositions[i])
-			cycle = 0;
+		if (currentPositions[i] + position < 0 ||
+			currentPositions[i] + position >= limitPositions[i])
+			position = 0;
 
-		motor.writeAndRead(ACServoMotorHelper::setPosition(cycle, i + 1));
+		motor.setPosition(position, i, false);
 	}
 
-	for (int i = 0; i < numMotors; i++)
-	{
-		motor.writeAndRead(ACServoMotorHelper::trigger(i + 1));
-		motor.writeAndRead(ACServoMotorHelper::normal(i + 1));
-	}
+	motor.trigger();
 }
 
 void Dialog::closeEvent(QCloseEvent* event)
 {
-	saveOption();
-
 	__super::closeEvent(event);
 }

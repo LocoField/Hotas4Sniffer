@@ -17,9 +17,9 @@ public:
 	static int getDataLength(const Command& data);
 	static bool checkRegistersWritten(const Command& data);
 
-	static bool getCycleValue(const Command& data, int& cycle); // high * 10000 + low
+	static bool getCycleValue(const Command& data, int& cycle); // high + low * 10000 bits
 	static bool getParamValue(const Command& data, int& value);
-	static bool getEncoderValue(const Command& data, int& position, bool& complete); // high + low * 2500
+	static bool getEncoderValue(const Command& data, int& position, bool& moving); // high + low * 10000 bits
 
 	static Command readCycles(int address = 1, int index = 0);
 	static Command readGear(int address = 1); // TODO: refactoring

@@ -118,7 +118,7 @@ bool ACServoMotorHelper::getParamValue(const Command& data, int& value)
 	return true;
 }
 
-bool ACServoMotorHelper::getEncoderValue(const Command& data, int& position, bool& complete)
+bool ACServoMotorHelper::getEncoderValue(const Command& data, int& position, bool& moving)
 {
 	if (data.size() < 11)
 		return false;
@@ -133,7 +133,7 @@ bool ACServoMotorHelper::getEncoderValue(const Command& data, int& position, boo
 		return false;
 
 	short output = (data[3] << 8) | data[4];
-	complete = (output & 8) == 0;
+	moving = (output & 8) != 0;
 
 	short encoder_high = (data[5] << 8) | data[6];
 	short encoder_low = (data[7] << 8) | data[8];
