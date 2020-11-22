@@ -473,6 +473,26 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		cycleValues[i] += heave * 10000;
 	}
 
+	if (numMotors == 2)
+	{
+		std::vector<int> desirePosition = centerPositions;
+
+		desirePosition[0] += rollMoved * angle;
+		desirePosition[1] -= rollMoved * angle;
+		desirePosition[0] -= pitchMoved * angle;
+		desirePosition[1] -= pitchMoved * angle;
+
+		cycleValues[0] += desirePosition[0] - currentPositions[0];
+		cycleValues[1] += desirePosition[1] - currentPositions[1];
+
+		printf("%6d    %6d\n", desirePosition[0], desirePosition[1]);
+		printf("%6d    %6d\n", cycleValues[0], cycleValues[1]);
+		printf("\n");
+	}
+	else if (numMotors == 4)
+	{
+	}
+
 	for (int i = 0; i < numMotors; i++)
 	{
 		int position = cycleValues[i] * reverseOption;
