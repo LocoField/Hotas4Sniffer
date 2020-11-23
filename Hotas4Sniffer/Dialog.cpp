@@ -128,7 +128,7 @@ void Dialog::initialize()
 				{
 					for (int i = 0; i < numMotors; i++)
 					{
-						motor.setPosition(centerPositions[i], i);
+						motor.setPosition(centerPositions[i] * sign, i);
 					}
 				}
 				else
@@ -139,6 +139,7 @@ void Dialog::initialize()
 						bool moving = true;
 
 						motor.position(i, position, moving);
+						position *= sign;
 
 						if (moving)
 							continue;
@@ -250,6 +251,7 @@ bool Dialog::loadOption()
 			}
 
 			portName = optionObject["port"].toString();
+			sign = optionObject["sign"].toInt();
 			speed = optionObject["speed"].toInt();
 		}
 
@@ -284,6 +286,7 @@ bool Dialog::saveOption()
 	optionObject["angle"] = angle;
 	optionObject["motors"] = optionArray;
 	optionObject["port"] = portName;
+	optionObject["sign"] = sign;
 	optionObject["speed"] = speed;
 
 	if (saveFile.open(QIODevice::WriteOnly | QIODevice::Truncate) == false)
@@ -447,6 +450,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 		bool moving = true;
 
 		motor.position(i, currentPositions[i], moving);
+		currentPositions[i] *= sign;
 
 		printf("%6d    ", currentPositions[i]);
 
@@ -470,24 +474,20 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		cycleValues[i] += heave * 10000;
+		cycleValues[i] += (heave * 10000 * sign);
 	}
 
 	if (numMotors == 2)
 	{
 		std::vector<int> desirePosition = centerPositions;
 
-		desirePosition[0] += rollMoved * angle;
-		desirePosition[1] -= rollMoved * angle;
-		desirePosition[0] -= pitchMoved * angle;
-		desirePosition[1] -= pitchMoved * angle;
+		desirePosition[0] += (rollMoved * angle * sign);
+		desirePosition[1] -= (rollMoved * angle * sign);
+		desirePosition[0] -= (pitchMoved * angle * sign);
+		desirePosition[1] -= (pitchMoved * angle * sign);
 
-		cycleValues[0] += desirePosition[0] - currentPositions[0];
-		cycleValues[1] += desirePosition[1] - currentPositions[1];
-
-		printf("%6d    %6d\n", desirePosition[0], desirePosition[1]);
-		printf("%6d    %6d\n", cycleValues[0], cycleValues[1]);
-		printf("\n");
+		cycleValues[0] += (desirePosition[0] - currentPositions[0]);
+		cycleValues[1] += (desirePosition[1] - currentPositions[1]);
 	}
 	else if (numMotors == 4)
 	{
@@ -495,7 +495,7 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 
 	for (int i = 0; i < numMotors; i++)
 	{
-		int position = cycleValues[i] * reverseOption;
+		int position = cycleValues[i];
 
 		if (currentPositions[i] + position < 0 ||
 			currentPositions[i] + position >= limitPositions[i])

@@ -47,7 +47,7 @@ private:
 
 	int angle = 10000; // difference
 	int speed = 1000; // rpm
-	int reverseOption = 1; // 1 or -1
+	int sign = 1; // 1 or -1
 
 	// for keyboard
 	int pitchMoved = 0;
