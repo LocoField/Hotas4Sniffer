@@ -509,6 +509,22 @@ void Dialog::keyPressEvent(QKeyEvent* event)
 	}
 	else if (numMotors == 4)
 	{
+		std::vector<int> desirePosition = centerPositions;
+
+		desirePosition[0] += (rollMoved * angle * sign);
+		desirePosition[1] += (rollMoved * angle * sign);
+		desirePosition[2] -= (rollMoved * angle * sign);
+		desirePosition[3] -= (rollMoved * angle * sign);
+
+		desirePosition[0] += (pitchMoved * angle * sign);
+		desirePosition[1] += (pitchMoved * angle * sign);
+		desirePosition[2] -= (pitchMoved * angle * sign);
+		desirePosition[3] -= (pitchMoved * angle * sign);
+
+		cycleValues[0] += (desirePosition[0] - currentPositions[0]);
+		cycleValues[1] += (desirePosition[1] - currentPositions[1]);
+		cycleValues[2] += (desirePosition[2] - currentPositions[2]);
+		cycleValues[3] += (desirePosition[3] - currentPositions[3]);
 	}
 
 	for (int i = 0; i < numMotors; i++)
