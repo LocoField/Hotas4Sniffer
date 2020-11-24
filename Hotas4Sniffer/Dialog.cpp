@@ -2,6 +2,8 @@
 #include "Dialog.h"
 #include "ACServoMotorHelper.h"
 
+#include <QtWidgets/QMenuBar>
+
 #define DIALOG_TITLE "Motion Simulator by Hotas 4"
 
 Dialog::Dialog()
@@ -207,6 +209,22 @@ void Dialog::initialize()
 
 	setWindowTitle(DIALOG_TITLE);
 	setWindowFlag(Qt::WindowMinimizeButtonHint);
+
+
+	QMenuBar* menu = new QMenuBar();
+	layout()->setMenuBar(menu);
+
+	QMenu* menuView = new QMenu("Option");
+	{
+		QAction* actionLoadOption = new QAction("Load Option");
+		connect(actionLoadOption, &QAction::triggered, [&]()
+		{
+			loadOption();
+		});
+
+		menuView->addAction(actionLoadOption);
+		menu->addMenu(menuView);
+	}
 }
 
 void Dialog::updateUI()
